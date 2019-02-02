@@ -63,7 +63,7 @@ CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq = F)
 # Testing alternative values of k might be useful to find the best performance.
 # Let's again use normalization.
 
-fp_fn <- data.frame(FP=integer(), FN=integer())
+fp_fn <- data.frame(k=integer(), FP=integer(), FN=integer())
 
 #pick how many k to try
 k = 1:100
@@ -73,11 +73,22 @@ for (i in 1:length(k)) {
   knn.pred <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, k = i)
   
   #calculate the accuracy
-  fp_fn[i, 1] <- table(knn.pred, wbcd_test_labels)[1,2]
-  fp_fn[i, 2] <- table(knn.pred, wbcd_test_labels)[2,1]
+  fp_fn[i, 1] <- i
+  fp_fn[i, 2] <- table(knn.pred, wbcd_test_labels)[1,2]
+  fp_fn[i, 3] <- table(knn.pred, wbcd_test_labels)[2,1]
 }
 
-head(fp_fn[with(fp_fn, order(FN, FP)), ], 25)
+fp_fn[with(fp_fn, order(FN, FP)), ]
+
+library(ggplot2)
+library(reshape2)
+melt_fp_fn <- melt(fp_fn, id = "k")
+ggplot(melt_fp_fn, aes(x = k, y = value, color = variable)) +
+  geom_line() +
+  ylab(label="number of mistakes") + 
+  xlab("k value") + 
+  scale_colour_manual(values=c("blue", "red")) + 
+  scale_x_continuous(breaks=k*10) 
 
 # k=14 gives 2 FP but 0 FN which results in the least cost for this scenario. (we may choose k=15 to prevent ties while voting) 
 # In other scenarios, False Positives may be as costly as False Negatives if not more!
