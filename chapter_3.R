@@ -61,11 +61,7 @@ CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq = F)
 # no change in the performance
 
 # Testing alternative values of k might be useful to find the best performance.
-# Let's again use normalization.
-
 fp_fn <- data.frame(k=integer(), FP=integer(), FN=integer())
-
-#pick how many k to try
 k = 1:100
 
 for (i in 1:length(k)) {
