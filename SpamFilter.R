@@ -1,3 +1,6 @@
+# In this work, naive Bayes algorithm is utilized in order to classify an SMS as spam or ham.
+# The dataset includes text messages received by mobile phone user and their labels as ham or spam.
+# The frequency of words in different messages gives patterns and I will try to catch them with Naive Bayes and text mining.
 #read the data
 sms_raw <- read.csv(paste0(getwd(),"/datasets/sms_spam.csv"), stringsAsFactors = F)
 
@@ -9,19 +12,22 @@ table(sms_raw$type)
 #install.packages("tm")
 library(tm)
 
+#processing the text data
+# Corpus function is very useful. It can be used for reading documents from PDF or MS Word etc.
 sms_corpus <- Corpus(VectorSource(sms_raw$text))
 print(sms_corpus)
 inspect(sms_corpus[1:3])
 
-#processing the text data
-corpus_clean <- tm_map(sms_corpus, tolower)
-corpus_clean <- tm_map(corpus_clean, removeNumbers)
-corpus_clean <- tm_map(corpus_clean, removeWords, stopwords())
-corpus_clean <- tm_map(corpus_clean, removePunctuation)
-corpus_clean <- tm_map(corpus_clean, stripWhitespace)
+# tm_map function provides a method for transforming a tm corpus
+corpus_clean <- tm_map(sms_corpus, tolower) #convert to lowercase
+corpus_clean <- tm_map(corpus_clean, removeNumbers) #remove numbers
+corpus_clean <- tm_map(corpus_clean, removeWords, stopwords()) #remove stop words like but, to, or etc.
+corpus_clean <- tm_map(corpus_clean, removePunctuation) #remove punctuations
+corpus_clean <- tm_map(corpus_clean, stripWhitespace) #leave only one space between words
 inspect(corpus_clean[1:3])
 
-# word tokenization
+#word tokenization: splitting messages into individual components
+# a sparse matrix is created for splitting each word in all the messages as a column
 sms_dtm <- DocumentTermMatrix(corpus_clean)
 
 #training and test sets
@@ -34,8 +40,8 @@ sms_dtm_test <- sms_dtm[4170:5574, ]
 sms_corpus_train <- corpus_clean[1:4169]
 sms_corpus_test <- corpus_clean[4170:5574]
 
-prop.table(table(sms_raw_train$type))
-prop.table(table(sms_raw_test$type))
+# checking if the class proportions are similar in training and test sets 
+prop.table(table(sms_raw_train$type));prop.table(table(sms_raw_test$type));
 
 #word cloud
 #install.packages("wordcloud")
@@ -48,7 +54,7 @@ ham <- subset(sms_raw_train, type == "ham")
 wordcloud(spam$text, max.words = 40, scale = c(3, .5))
 wordcloud(ham$text, max.words = 40, scale = c(3, .5))
 
-findFreqTerms(sms_dtm_train, 5)
+findFreqTerms(sms_dtm_train, 5) #brings words that appear at least 5 times in the texts
 sms_dict <- findFreqTerms(sms_dtm_train, 5)
 
 #train and test sets include words appearing at least 5 times in all the messages
@@ -56,34 +62,38 @@ sms_train <- DocumentTermMatrix(sms_corpus_train, list(dictionary = sms_dict))
 sms_test <- DocumentTermMatrix(sms_corpus_test, list(dictionary = sms_dict))
 dim(sms_train)
 dim(sms_test)
+inspect(sms_train) #sparse matrix now has the count of words in the corresponding cells.
 
-#converting numeric features to factor
+# converting numeric features to factor. To apply naive bayes we need factor variable.
 convert_counts <- function(x) {
   x <- ifelse(x > 0, 1, 0)
   x <- factor(x, levels = c(0, 1), labels = c("No","Yes"))
   return(x)
 }
-
 sms_train <- apply(sms_train, 2, convert_counts)
 sms_test <- apply(sms_test, 2, convert_counts)
 
 #training a model
-install.packages("e1071")
+#install.packages("e1071")
 library(e1071)
 sms_classifier <- naiveBayes(sms_train, sms_raw_train$type)
 
 #evaluating model performance
 sms_test_pred <- predict(sms_classifier, sms_test)
-install.packages("gmodels")
+#install.packages("gmodels")
 library(gmodels)
 CrossTable(sms_test_pred, sms_raw_test$type, 
            prop.chisq = F, prop.t = F, 
            dnn = c("predicted","actual"))
+# 6 messages were incorrectly classified as spam. Performance is rather good but it can be better.
 
 #improving the model
+# when we set laplace estimator to 0 (default), zero spam and zero ham messages have indisputable say
+# in the classification process. Just because the word 'ringtone' only appeared in spam messages
+# in the training data, it does not mean that every message with that word should be classified as spam
 sms_classifier2 <- naiveBayes(sms_train, sms_raw_train$type, laplace = 1)
-sms_test_pred <- predict(sms_classifier2, sms_test)
-CrossTable(sms_test_pred, sms_raw_test$type, 
+sms_test_pred2 <- predict(sms_classifier2, sms_test)
+CrossTable(sms_test_pred2, sms_raw_test$type, 
            prop.chisq = F, prop.t = F, 
            dnn = c("predicted","actual"))
 
