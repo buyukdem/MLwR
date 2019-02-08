@@ -1,3 +1,7 @@
+# This work utilizes Decision Tree Algorithm whether to reject or accept a customer's loan application
+# using their financial information and characteristics. Decision tree is very useful for this problem
+# because it provides a parsimonious model with a high accuracy. 
+
 #read the data
 setwd("C:/Users/U085452/Desktop/ML with R/MLwR-master")
 credit <- read.csv(paste0(getwd(),"/datasets/credit.csv"))
@@ -10,6 +14,7 @@ table(credit$default)
 credit$default <- factor(credit$default, levels = c("1","2"), labels = c("No","Yes"))
 
 #training and test sets
+# the data should be ordered randomly before splitting. To make it random, we do the following:
 set.seed(12345)
 credit_rand <- credit[order(runif(1000)), ]
 summary(credit$amount)
@@ -37,12 +42,15 @@ CrossTable(credit_test$default, credit_pred,
            prop.c = F, prop.chisq = F, prop.t = F,
            dnn = c("actual_default","predicted_default"))
 
-#improving the model performance, boosting
+#improving the model performance, adaptive boosting
+# many decision trees are built, and trees vote on the best class for each example. We could build a model
+# with better predictive power with boosting since it ensembles a bunch of weak learners to have a better one.
 credit_boost10 <- C5.0(credit_train[-17], credit_train$default, trials = 10)
 credit_boost10
 summary(credit_boost10)
 
 credit_boots10_pred <- predict(credit_boost10, credit_test)
+library(gmodels)
 CrossTable(credit_test$default, credit_boots10_pred,
            prop.c = F, prop.chisq = F, prop.t = F,
            dnn = c("actual_default","predicted_default"))
