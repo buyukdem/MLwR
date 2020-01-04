@@ -1,5 +1,5 @@
-# This work shows how to use kNN algorithm to diagnose breast cancer benefiting from
-# the data consists of measurements of biopsy mass taken from patients breasts. 
+## This work shows how to use kNN algorithm to diagnose breast cancer benefiting from
+## the data consists of measurements of biopsy mass taken from patients breasts. 
 
 #read the data
 wbcd <- read.csv(paste0(getwd(),"/datasets/wisc_bc_data.csv"), stringsAsFactors = FALSE)
