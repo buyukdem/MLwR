@@ -6,7 +6,7 @@ sms_raw <- read.csv(paste0(getwd(),"/datasets/sms_spam.csv"), stringsAsFactors =
 
 str(sms_raw)
 sms_raw$type <- factor(sms_raw$type)
-table(sms_raw$type)
+table(sms_raw$type) 
 
 #text mining package
 #install.packages("tm")
