@@ -5,7 +5,7 @@
 #read the data
 setwd("C:/Users/U085452/Desktop/ML with R/MLwR-master")
 credit <- read.csv(paste0(getwd(),"/datasets/credit.csv"))
-
+ 
 str(credit)
 table(credit$checking_balance)
 table(credit$savings_balance)
